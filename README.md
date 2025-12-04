@@ -89,31 +89,35 @@ Step B: Cloudflare Pages 设置
 ```bash
 # 登录 Cloudflare Dashboard -> Workers & Pages -> Create Application -> Pages -> Connect to Git。
 # 选择你的仓库，配置如下：
-Framework preset: Astro
+Framework preset: Astros
 Build command: npm run build
 Output directory: dist
 # 设置环境变量 (Environment Variables):
 ADMIN_PASSWORD: 设置你的后台登录密码 (例如 nebula-admin-888)。
 Step C: 绑定 D1 数据库 (最关键!)
-```bash
+```
+
 # 部署完成后，进入项目 Settings -> Functions。
 # 找到 D1 database bindings。
 # 点击 Add binding：
-Variable name: DB (必须是大写 DB)
+Variable name: DB (必须是大写 DB)<br/>
 D1 database: 选择你在命令行创建的 icp-db。
 # 重新部署：进入 Deployments -> 找到最新一次 -> 点击 Retry deployment。
-```
+
+
 Step D: 初始化线上数据库
 ```bash
 # 在你的本地终端运行以下命令，将表结构推送到 Cloudflare 云端：
 npx wrangler d1 execute icp-db --remote --file=./db/schema.sql
 ```
 
-
-# 注意：这将直接操作线上数据库
+```bash
+注意：这将直接操作线上数据库  
 npx wrangler d1 execute icp-db --remote --file=./db/schema.sql
+```
+
 /// PROJECT_STATISTICS (项目统计)
-<div align="center">
+
 🌟 Stargazers over time
 <!-- Star 趋势图 -->
 ![alt text](https://starchart.cc/C-4-C-4/NEBULA-ICP.svg)
@@ -125,23 +129,12 @@ npx wrangler d1 execute icp-db --remote --file=./db/schema.sql
 <br/>
 
 
-<!-- 基础徽章 -->
-![alt text](https://img.shields.io/github/stars/C-4-C-4/NEBULA-ICP?style=flat-square&label=Stars&logo=github)
-
-![alt text](https://img.shields.io/github/forks/C-4-C-4/NEBULA-ICP?style=flat-square&label=Forks&logo=github)
-
-![alt text](https://img.shields.io/github/issues/C-4-C-4/NEBULA-ICP?style=flat-square&label=Issues&logo=github)
-
-![alt text](https://img.shields.io/github/repo-size/C-4-C-4/NEBULA-ICP?style=flat-square&label=Size&logo=github)
-</div>
+/// AUTHOR & CREDITS (作者与致谢)<br/>
+Architect: CCCC4444<br/>
+Design Inspiration: Echo Log<br/>
+Snapshot Service: WordPress mShots<br/>
+Favicon Service: Favicon.im / Iowen API<br/>
 
 
-/// AUTHOR & CREDITS (作者与致谢)
-Architect: CCCC4444
-Design Inspiration: Echo Log
-Snapshot Service: WordPress mShots
-Favicon Service: Favicon.im / Iowen API
-
-
-"We are not filing domains; we are giving digital entities an identity."
+"We are not filing domains; we are giving digital entities an identity."<br/>
 —— PROJECT NEBULA
