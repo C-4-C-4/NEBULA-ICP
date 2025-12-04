@@ -80,17 +80,14 @@ npm run dev
 3. 生产环境部署 (Production)
 Step A: 推送代码到 GitHub
 将你的代码推送到你的 GitHub 仓库（注意检查 .gitignore，不要上传 node_modules 和 .wrangler）。
-
 Step B: Cloudflare Pages 设置
 登录 Cloudflare Dashboard -> Workers & Pages -> Create Application -> Pages -> Connect to Git。
-
 选择你的仓库，配置如下：
 Framework preset: Astro
 Build command: npm run build
 Output directory: dist
 设置环境变量 (Environment Variables):
 ADMIN_PASSWORD: 设置你的后台登录密码 (例如 nebula-admin-888)。
-
 Step C: 绑定 D1 数据库 (最关键!)
 部署完成后（第一次可能会失败，不用管），进入项目 Settings -> Functions。
 找到 D1 database bindings。
@@ -100,14 +97,9 @@ D1 database: 选择你在命令行创建的 icp-db。
 重新部署：进入 Deployments -> 找到最新一次 -> 点击 Retry deployment。
 Step D: 初始化线上数据库
 在你的本地终端运行以下命令，将表结构推送到 Cloudflare 云端：
-code
-Bash
 
 # 注意：这将直接操作线上数据库
 npx wrangler d1 execute icp-db --remote --file=./db/schema.sql
-
-
-
 
 /// PROJECT_STATISTICS (项目统计)
 <div align="center">
@@ -125,9 +117,6 @@ npx wrangler d1 execute icp-db --remote --file=./db/schema.sql
 ![alt text](https://img.shields.io/github/repo-size/C-4-C-4/NEBULA-ICP)
 </div>
 
-
-
-
 /// AUTHOR & CREDITS (作者与致谢)
 Architect: CCCC4444
 Design Inspiration: Echo Log
@@ -135,18 +124,3 @@ Snapshot Service: WordPress mShots
 Favicon Service: Favicon.im / Iowen API
 "We are not filing domains; we are giving digital entities an identity."
 —— PROJECT NEBULA
-code
-Code
-### 使用说明：
-
-
-
-
-1.  **关于访客统计**：
-    我使用了一个通用的访客统计徽章 `visitor-badge.laobi.icu`，其中的 `page_id` 设置为了 `C-4-C-4.NEBULA-ICP`。如果你更改了仓库名或者用户名，请记得修改这个参数，否则统计会归零或不准确。
-
-2.  **关于截图**：
-    建议你在仓库里新建一个 `screenshots` 文件夹，放入 `home.png` (首页), `archive.png` (列表页), `admin.png` (后台) 等截图，然后在 README 中用 `![Home](screenshots/home.png)` 的方式展示，这样会更吸引人。
-
-3.  **关于 GitHub 链接**：
-    文档中的链接是基于你的用户名 `C-4-C-4` 和项目名 `NEBULA-ICP` 生成的。如果你的 GitHub 用户名或仓库名不同，请记得全局替换一下。
