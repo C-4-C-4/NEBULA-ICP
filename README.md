@@ -122,6 +122,7 @@ npx wrangler d1 execute icp-db --remote --file=./db/schema.sql
 <!-- Star 趋势图 -->
 ![alt text](https://starchart.cc/C-4-C-4/NEBULA-ICP.svg)
 <br/>
+
 🕵️ Visitor Count
 <!-- 萌系访客统计 (Moe Counter) -->
 <!-- 这里使用了你的仓库名作为 ID，如果显示不出来，可能需要等待服务缓存刷新 -->
