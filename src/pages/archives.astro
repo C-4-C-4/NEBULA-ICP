@@ -1,0 +1,63 @@
+---
+import '../styles/global.css';
+import Navbar from '../components/Navbar.astro';
+import ArchiveGrid from '../components/ArchiveGrid.jsx'; // 引入新组件
+
+interface Site {
+  id: number;
+  domain: string;
+  title: string;
+  description: string;
+  owner: string;
+  email: string;
+  logo_url: string;
+  snapshot_url: string;
+  icp_code: string;
+  created_at: string;
+  is_hidden: number;
+}
+
+let allSites: Site[] = [];
+
+try {
+  // @ts-ignore
+  const { DB } = Astro.locals.runtime.env;
+  // 获取所有未隐藏的数据
+  // 注意：这里我们不 LIMIT，因为要在前端进行随机打乱
+  const query = await DB.prepare("SELECT * FROM sites WHERE is_hidden = 0 ORDER BY id DESC").all();
+  allSites = query.results as unknown as Site[];
+} catch (e) {
+  console.error("DB Load Error:", e);
+}
+---
+
+<html lang="zh-cn">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width" />
+    <title>ARCHIVES // 档案库</title>
+</head>
+<body class="bg-grid-pattern min-h-screen font-mono text-echo-dark">
+    <Navbar />
+
+    <main class="max-w-[1400px] mx-auto p-6">
+        
+        {/* 标题区域 */}
+        <div class="mb-6">
+            <h1 class="text-4xl font-black text-echo-dark mb-2">CLASSIFIED ARCHIVES</h1>
+            <div class="flex items-center gap-2 text-xs text-gray-500 uppercase font-bold tracking-widest">
+                <span>DATABASE: CONNECTED</span>
+                <span>//</span>
+                <span>TOTAL RECORDS: {allSites.length}</span>
+            </div>
+        </div>
+
+        {/* 
+            核心交互区域 
+            client:load = 页面加载时立即启动 React 组件，使其具有交互性
+        */}
+        <ArchiveGrid client:load initialSites={allSites} />
+
+    </main>
+</body>
+</html>

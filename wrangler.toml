@@ -1,0 +1,8 @@
+name = "icp-echo-system"
+pages_build_output_dir = "dist"
+compatibility_date = "2024-01-01"
+
+[[d1_databases]]
+binding = "DB"
+database_name = "icp"
+database_id = "418b0d71-29fc-4262-99f6-b33ad2f897d0"

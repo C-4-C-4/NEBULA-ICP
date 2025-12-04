@@ -1,0 +1,41 @@
+---
+import '../styles/global.css';
+import Navbar from '../components/Navbar.astro';
+import UserDelete from '../components/UserDelete.jsx';
+---
+
+<html lang="zh-cn">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width" />
+    <title>CANCEL // 注销备案</title>
+</head>
+<body class="bg-grid-pattern min-h-screen font-mono text-echo-dark">
+    <Navbar />
+
+    <!-- 
+      修改点：
+      1. pt-20 -> pt-6: 让标题靠近导航栏，与首页保持一致。
+    -->
+    <main class="flex-grow flex flex-col items-center w-full pt-6 pb-12 px-4">
+        
+        <div class="text-center mb-10 relative z-10">
+            <h1 class="text-4xl font-black mb-2 text-red-600">DEREGISTRATION</h1>
+            
+            <!-- 
+               修改点：
+               1. p -> div: 避免 display 问题。
+               2. inline-block -> inline-flex justify-center items-center: 
+                  强制内部文字水平垂直绝对居中。
+               3. min-w-[150px]: 给个最小宽度，让居中效果更明显（可选，不加也行）。
+            -->
+            <div class="text-sm bg-black text-white inline-flex justify-center items-center px-4 py-1 font-bold shadow-hard-sm">
+                /// DANGER ZONE
+            </div>
+        </div>
+
+        <UserDelete client:load />
+
+    </main>
+</body>
+</html>

@@ -1,0 +1,67 @@
+---
+const pathname = new URL(Astro.request.url).pathname;
+// 简单的路径判断：去掉末尾斜杠对比
+const currentPath = pathname.replace(/\/$/, '') || '/';
+const isArchivesPage = currentPath === '/archives';
+---
+
+<nav class="w-full border-b-4 border-echo-dark bg-echo-bg sticky top-0 z-50">
+  <div class="max-w-[1400px] mx-auto px-4 h-16 flex items-center gap-4">
+    
+    <!-- 1. 左侧 LOGO -->
+    <a href="/" class="flex items-center gap-2 group flex-shrink-0">
+      <div class="bg-echo-orange text-white w-8 h-8 flex items-center justify-center font-black text-xs group-hover:bg-echo-dark transition-colors tracking-tighter">
+        ICP
+      </div>
+      <span class="font-black text-xl tracking-tighter text-echo-dark hidden sm:block">PROJECT NEBULA</span>
+    </a>
+
+    <!-- 2. 中间 搜索框 (仅在档案页显示，占据剩余空间) -->
+    <div class="flex-1 flex justify-center max-w-2xl mx-auto">
+      {isArchivesPage && (
+        <div class="relative w-full group">
+            <div class="absolute inset-y-0 left-3 flex items-center pointer-events-none font-bold text-gray-400 text-xs">
+                SEARCH //
+            </div>
+            <input 
+                id="global-search-input"
+                type="text" 
+                placeholder="DOMAIN OR ICP..." 
+                class="w-full bg-white border-2 border-black py-1.5 pl-20 pr-4 text-sm font-bold focus:outline-none focus:shadow-[4px_4px_0_0_#000] transition-all uppercase placeholder-gray-300"
+            />
+        </div>
+      )}
+    </div>
+
+    <!-- 3. 右侧 链接 -->
+    <div class="flex gap-4 sm:gap-6 text-sm font-bold flex-shrink-0">
+      <a href="/" class={`hover:text-echo-orange transition-colors ${currentPath === '/' ? 'text-echo-orange border-b-2 border-echo-orange' : 'text-echo-dark'}`}>
+        /// 申请收录
+      </a>
+      <a href="/archives" class={`hover:text-echo-orange transition-colors ${currentPath === '/archives' ? 'text-echo-orange border-b-2 border-echo-orange' : 'text-echo-dark'}`}>
+        /// 档案列表
+      </a>
+      <a href="/modify" class={`hover:text-echo-orange transition-colors ${currentPath === '/modify' ? 'text-echo-orange border-b-2 border-echo-orange' : 'text-echo-dark'}`}>
+        /// 修改
+      </a>
+      <!-- 新增注销入口 (红色高亮) -->
+      <a href="/cancel" class={`hover:text-red-500 transition-colors ${currentPath === '/cancel' ? 'text-red-500 border-b-2 border-red-500' : 'text-echo-dark'}`}>
+        /// 注销
+      </a>
+    </div>
+
+  </div>
+</nav>
+
+<!-- 客户端脚本：监听输入并广播事件 -->
+<script>
+  const input = document.getElementById('global-search-input');
+  if (input) {
+    input.addEventListener('input', (e) => {
+      // @ts-ignore
+      const val = e.target.value;
+      // 发送自定义事件，通知 React 组件更新
+      window.dispatchEvent(new CustomEvent('SEARCH_UPDATE', { detail: val }));
+    });
+  }
+</script>

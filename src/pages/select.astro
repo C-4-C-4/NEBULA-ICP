@@ -1,0 +1,27 @@
+---
+import '../styles/global.css';
+import Navbar from '../components/Navbar.astro';
+import NumberSelector from '../components/NumberSelector.jsx';
+---
+
+<html lang="zh-cn">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width" />
+    <title>SELECT NUMBER // 选号大厅</title>
+</head>
+<body class="bg-grid-pattern min-h-screen font-mono text-echo-dark">
+    <Navbar />
+
+    <main class="pt-12 pb-12 px-4">
+        <div class="text-center mb-10">
+            <h1 class="text-4xl md:text-6xl font-black mb-2">NUMBER POOL</h1>
+            <p class="text-sm bg-echo-orange text-white inline-block px-3 py-1 font-bold">
+                /// DATABASE: 2025 SERIES AVAILABLE
+            </p>
+        </div>
+
+        <NumberSelector client:load />
+    </main>
+</body>
+</html>

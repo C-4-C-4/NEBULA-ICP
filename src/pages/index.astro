@@ -1,16 +1,74 @@
 ---
-
+import '../styles/global.css';
+import Form from '../components/Form.jsx';
+import Navbar from '../components/Navbar.astro';
 ---
 
-<html lang="en">
-	<head>
-		<meta charset="utf-8" />
-		<link rel="icon" type="image/svg+xml" href="/favicon.svg" />
-		<meta name="viewport" content="width=device-width" />
-		<meta name="generator" content={Astro.generator} />
-		<title>Astro</title>
-	</head>
-	<body>
-		<h1>Astro</h1>
-	</body>
+<html lang="zh-cn">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width" />
+    <title>PROJECT NEBULA // APPLY</title>
+</head>
+<body class="bg-grid-pattern min-h-screen font-mono text-echo-dark flex flex-col">
+
+    <!-- 引入导航栏 -->
+    <Navbar />
+
+    <!-- 主体内容 -->
+    <main class="flex-grow flex flex-col items-center w-full pt-6 pb-12 px-4">
+        
+        <!-- 装饰性标题区域 (修改为 Nebula 风格) -->
+        <div class="text-center mb-8 animate-fade-in relative z-10">
+            <h1 class="text-6xl md:text-8xl font-black text-echo-dark tracking-tighter mb-2 glitch-effect">
+                NEBULA<span class="text-echo-orange">.ICP</span>
+            </h1>
+            <p class="text-sm md:text-base font-bold bg-echo-dark text-white inline-block px-4 py-1 rotate-1 shadow-hard-sm">
+                /// ICP FILING PROTOCOL INITIATED
+            </p>
+        </div>
+
+        <!-- 表单容器 -->
+        <div class="w-full max-w-lg relative z-10">
+            <Form client:load />
+            
+            <!-- 
+                核心修改：底部版权信息区域 
+                替换了之前的装饰性参数，改为作者和项目信息
+            -->
+            <div class="mt-8 border-t-2 border-gray-200 pt-6 text-center animate-fade-in">
+                
+                {/* 第一行：项目名称 */}
+                <h3 class="text-sm font-black text-echo-dark tracking-[0.2em] uppercase mb-1">
+                    PROJECT NEBULA
+                </h3>
+                
+                {/* 第二行：系统名称 */}
+                <p class="text-[10px] text-gray-500 font-bold mb-3">
+                    NEBULA.ICP 备案系统
+                </p>
+                
+                {/* 第三行：作者署名 */}
+                <div class="inline-block bg-gray-100 border border-gray-300 px-3 py-1 rounded-full text-[10px] text-gray-400 font-mono">
+                    DESIGNED BY <span class="text-echo-orange font-bold">CCCC4444</span>
+                </div>
+
+            </div>
+        </div>
+
+    </main>
+
+    <!-- 移除了原有的底部 Footer，使视觉焦点更集中 -->
+
+</body>
 </html>
+
+<style>
+    .animate-fade-in {
+        animation: fadeIn 1s ease-out;
+    }
+    @keyframes fadeIn {
+        from { opacity: 0; transform: translateY(20px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+</style>

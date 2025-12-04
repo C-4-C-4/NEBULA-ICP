@@ -1,0 +1,32 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* 自定义网格背景 */
+.bg-grid-pattern {
+  background-color: #F3F3EE;
+  background-image: 
+      linear-gradient(#E5E5E5 1px, transparent 1px),
+      linear-gradient(90deg, #E5E5E5 1px, transparent 1px);
+  background-size: 20px 20px;
+}
+
+/* 简单的闪烁动画 */
+@keyframes blink {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0; }
+}
+.animate-blink {
+  animation: blink 1s step-end infinite;
+}
+
+/* 滚动条美化 */
+::-webkit-scrollbar {
+  width: 8px;
+}
+::-webkit-scrollbar-track {
+  background: #F3F3EE;
+}
+::-webkit-scrollbar-thumb {
+  background: #1A1A1A;
+}

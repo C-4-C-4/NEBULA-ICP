@@ -1,0 +1,30 @@
+---
+import '../styles/global.css';
+import Navbar from '../components/Navbar.astro';
+import UserEdit from '../components/UserEdit.jsx';
+---
+
+<html lang="zh-cn">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width" />
+    <title>MODIFY // 修改资料</title>
+</head>
+<body class="bg-grid-pattern min-h-screen font-mono text-echo-dark">
+    <Navbar />
+
+    <main class="flex-grow flex flex-col items-center w-full pt-20 pb-12 px-4">
+        
+        {/* 修正点：将 className 改为 class */}
+        <div class="text-center mb-10">
+            <h1 class="text-4xl font-black mb-2">UPDATE RECORD</h1>
+            <p class="text-sm bg-black text-white inline-block px-3 py-1 font-bold">
+                /// ACCESS CONTROL: OWNER ONLY
+            </p>
+        </div>
+
+        <UserEdit client:load />
+
+    </main>
+</body>
+</html>

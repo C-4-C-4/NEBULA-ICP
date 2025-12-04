@@ -1,0 +1,82 @@
+---
+import '../styles/global.css';
+import AdminPanel from '../components/AdminPanel.jsx';
+
+// 服务端鉴权逻辑
+const cookie = Astro.cookies.get("admin_session");
+const isAuthed = cookie && cookie.value === "true";
+
+let sites = [];
+
+if (isAuthed) {
+  try {
+    // @ts-ignore
+    const { DB } = Astro.locals.runtime.env;
+    // 管理员能看到所有数据，包括隐藏的
+    const query = await DB.prepare("SELECT * FROM sites ORDER BY id DESC").all();
+    sites = query.results;
+  } catch (e) {
+    console.error(e);
+  }
+}
+---
+
+<html lang="zh-cn">
+<head>
+    <meta charset="UTF-8" />
+    <title>SYSTEM ROOT // ADMIN</title>
+</head>
+<body class="bg-black text-green-500 font-mono min-h-screen">
+
+    {!isAuthed ? (
+        // === 登录界面 ===
+        <div class="flex items-center justify-center h-screen">
+            <div class="border-2 border-green-600 p-8 max-w-md w-full shadow-[8px_8px_0_0_#166534]">
+                <h1 class="text-2xl font-bold mb-6 text-echo-orange glitch-effect">ACCESS CONTROL</h1>
+                <form id="loginForm" class="space-y-4">
+                    <div>
+                        <label class="block text-xs mb-1">Passphrase:</label>
+                        <input type="password" name="password" class="w-full bg-black border border-green-600 p-2 text-white focus:outline-none focus:border-echo-orange" autofocus />
+                    </div>
+                    <button id="loginBtn" class="w-full bg-green-700 text-black font-bold py-2 hover:bg-echo-orange transition-colors">
+                        AUTHENTICATE
+                    </button>
+                    <div id="msg" class="text-xs text-red-500 h-4"></div>
+                </form>
+            </div>
+        </div>
+    ) : (
+        // === 管理界面 ===
+        <AdminPanel client:load sites={sites} />
+    )}
+
+    <script>
+        // 处理登录逻辑
+        const form = document.getElementById('loginForm');
+        if (form) {
+            form.addEventListener('submit', async (e) => {
+                e.preventDefault();
+                const formData = new FormData(e.target as HTMLFormElement);
+                const btn = document.getElementById('loginBtn') as HTMLButtonElement;
+                const msg = document.getElementById('msg');
+                
+                btn.innerText = "VERIFYING...";
+                btn.disabled = true;
+
+                const res = await fetch('/api/admin/login', {
+                    method: 'POST',
+                    body: formData
+                });
+
+                if (res.ok) {
+                    window.location.reload(); // 登录成功刷新页面
+                } else {
+                    if(msg) msg.innerText = "ACCESS DENIED: Invalid Password";
+                    btn.innerText = "AUTHENTICATE";
+                    btn.disabled = false;
+                }
+            });
+        }
+    </script>
+</body>
+</html>

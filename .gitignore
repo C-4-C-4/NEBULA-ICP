@@ -1,24 +1,28 @@
-# build output
-dist/
-# generated types
-.astro/
-
-# dependencies
+# 依赖包 (体积巨大，线上会自动安装)
 node_modules/
 
-# logs
+# 构建产物 (线上会自动构建)
+dist/
+
+# Astro 缓存
+.astro/
+
+# Cloudflare Wrangler 本地状态 (包含本地数据库缓存，不要传)
+.wrangler/
+
+# 环境变量 (包含密码，绝对不要传)
+.env
+.env.*
+
+# 操作系统生成的垃圾文件
+.DS_Store
+Thumbs.db
+
+# VS Code 设置 (可选，通常个人项目不传)
+.vscode/
+
+# 日志文件
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
 pnpm-debug.log*
-
-
-# environment variables
-.env
-.env.production
-
-# macOS-specific files
-.DS_Store
-
-# jetbrains setting folder
-.idea/
