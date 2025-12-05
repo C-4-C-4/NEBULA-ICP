@@ -13,14 +13,19 @@ import UserEdit from '../components/UserEdit.jsx';
 <body class="bg-grid-pattern min-h-screen font-mono text-echo-dark">
     <Navbar />
 
-    <main class="flex-grow flex flex-col items-center w-full pt-20 pb-12 px-4">
+    <!-- 
+      核心修改点：
+      1. pt-20 -> pt-6: 缩小顶部距离，让内容靠近导航栏。
+      2. 移除了 items-center: 虽然 flex-col，但内部宽度已由 max-w-lg 控制，去掉可以避免某些意外拉伸。
+    -->
+    <main class="flex-grow flex flex-col items-center w-full pt-6 pb-12 px-4">
         
-        {/* 修正点：将 className 改为 class */}
-        <div class="text-center mb-10">
+        <div class="text-center mb-10 relative z-10">
             <h1 class="text-4xl font-black mb-2">UPDATE RECORD</h1>
-            <p class="text-sm bg-black text-white inline-block px-3 py-1 font-bold">
+            
+            <div class="text-sm bg-black text-white inline-flex justify-center items-center px-4 py-1 font-bold shadow-hard-sm">
                 /// ACCESS CONTROL: OWNER ONLY
-            </p>
+            </div>
         </div>
 
         <UserEdit client:load />

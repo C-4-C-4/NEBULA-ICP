@@ -12,7 +12,6 @@ if (isAuthed) {
   try {
     // @ts-ignore
     const { DB } = Astro.locals.runtime.env;
-    // 管理员能看到所有数据，包括隐藏的
     const query = await DB.prepare("SELECT * FROM sites ORDER BY id DESC").all();
     sites = query.results;
   } catch (e) {
@@ -26,23 +25,47 @@ if (isAuthed) {
     <meta charset="UTF-8" />
     <title>SYSTEM ROOT // ADMIN</title>
 </head>
-<body class="bg-black text-green-500 font-mono min-h-screen">
+<body class="bg-black text-green-500 font-mono min-h-screen overflow-hidden">
 
     {!isAuthed ? (
-        // === 登录界面 ===
-        <div class="flex items-center justify-center h-screen">
-            <div class="border-2 border-green-600 p-8 max-w-md w-full shadow-[8px_8px_0_0_#166534]">
-                <h1 class="text-2xl font-bold mb-6 text-echo-orange glitch-effect">ACCESS CONTROL</h1>
-                <form id="loginForm" class="space-y-4">
+        // === 登录界面 (增加 ID 用于 JS 控制动画) ===
+        <div class="flex items-center justify-center h-screen w-full relative overflow-hidden">
+            {/* 背景装饰网格 */}
+            <div class="absolute inset-0 opacity-20 pointer-events-none" 
+                 style="background-image: linear-gradient(rgba(0, 255, 0, 0.1) 1px, transparent 1px), linear-gradient(90deg, rgba(0, 255, 0, 0.1) 1px, transparent 1px); background-size: 40px 40px;">
+            </div>
+
+            <div id="login-container" class="border-2 border-green-600 p-10 max-w-md w-full shadow-[0_0_20px_rgba(22,101,52,0.5)] bg-black relative z-10 transition-all duration-300">
+                <h1 class="text-3xl font-bold mb-8 text-echo-orange glitch-effect tracking-widest border-b border-green-800 pb-2">
+                    ACCESS CONTROL
+                </h1>
+                
+                <form id="loginForm" class="space-y-6">
                     <div>
-                        <label class="block text-xs mb-1">Passphrase:</label>
-                        <input type="password" name="password" class="w-full bg-black border border-green-600 p-2 text-white focus:outline-none focus:border-echo-orange" autofocus />
+                        <label class="block text-xs mb-2 text-green-400 font-bold uppercase tracking-widest">Passphrase_Input:</label>
+                        <input 
+                            type="password" 
+                            name="password" 
+                            id="passwordInput"
+                            class="w-full bg-black border-2 border-green-700 p-3 text-white focus:outline-none focus:border-echo-orange focus:shadow-[0_0_10px_#E85D22] transition-all font-bold tracking-widest text-center" 
+                            autofocus 
+                            autocomplete="off"
+                        />
                     </div>
-                    <button id="loginBtn" class="w-full bg-green-700 text-black font-bold py-2 hover:bg-echo-orange transition-colors">
+                    <button 
+                        id="loginBtn" 
+                        class="w-full bg-green-700 text-black font-black py-4 text-lg hover:bg-echo-orange hover:text-black transition-all duration-200 border-2 border-transparent hover:border-white shadow-lg"
+                    >
                         AUTHENTICATE
                     </button>
-                    <div id="msg" class="text-xs text-red-500 h-4"></div>
+                    <div id="msg" class="text-xs text-red-500 h-4 text-center font-bold tracking-wider"></div>
                 </form>
+
+                {/* 角落装饰 */}
+                <div class="absolute top-0 left-0 w-3 h-3 border-t-2 border-l-2 border-echo-orange"></div>
+                <div class="absolute top-0 right-0 w-3 h-3 border-t-2 border-r-2 border-echo-orange"></div>
+                <div class="absolute bottom-0 left-0 w-3 h-3 border-b-2 border-l-2 border-echo-orange"></div>
+                <div class="absolute bottom-0 right-0 w-3 h-3 border-b-2 border-r-2 border-echo-orange"></div>
             </div>
         </div>
     ) : (
@@ -51,17 +74,27 @@ if (isAuthed) {
     )}
 
     <script>
-        // 处理登录逻辑
         const form = document.getElementById('loginForm');
+        const container = document.getElementById('login-container');
+        const input = document.getElementById('passwordInput');
+        const btn = document.getElementById('loginBtn');
+        const msg = document.getElementById('msg');
+
         if (form) {
             form.addEventListener('submit', async (e) => {
                 e.preventDefault();
-                const formData = new FormData(e.target as HTMLFormElement);
-                const btn = document.getElementById('loginBtn') as HTMLButtonElement;
-                const msg = document.getElementById('msg');
+                // @ts-ignore
+                const formData = new FormData(e.target);
                 
-                btn.innerText = "VERIFYING...";
+                // 1. 提交中状态
+                // @ts-ignore
+                btn.innerText = "ACCESSING...";
+                // @ts-ignore
                 btn.disabled = true;
+                // @ts-ignore
+                btn.classList.add('animate-pulse', 'bg-echo-orange');
+                // @ts-ignore
+                input.disabled = true;
 
                 const res = await fetch('/api/admin/login', {
                     method: 'POST',
@@ -69,14 +102,59 @@ if (isAuthed) {
                 });
 
                 if (res.ok) {
-                    window.location.reload(); // 登录成功刷新页面
+                    // 2. 登录成功动画 (收缩消失)
+                    if(msg) msg.innerText = "ACCESS GRANTED. INITIALIZING...";
+                    if(msg) msg.className = "text-xs text-green-400 h-4 text-center font-bold tracking-wider animate-pulse";
+                    
+                    if(container) {
+                        container.classList.add('scale-110', 'brightness-150'); // 先亮一下
+                        setTimeout(() => {
+                            container.classList.add('opacity-0', 'scale-0', 'blur-xl'); // 然后消失
+                        }, 100);
+                    }
+
+                    setTimeout(() => {
+                        window.location.reload();
+                    }, 800); // 等待动画播放完刷新
+
                 } else {
-                    if(msg) msg.innerText = "ACCESS DENIED: Invalid Password";
+                    // 3. 登录失败动画 (抖动)
+                    if(msg) msg.innerText = "ACCESS DENIED: INVALID PASSPHRASE";
+                    // @ts-ignore
                     btn.innerText = "AUTHENTICATE";
+                    // @ts-ignore
                     btn.disabled = false;
+                    // @ts-ignore
+                    btn.classList.remove('animate-pulse', 'bg-echo-orange');
+                    // @ts-ignore
+                    input.disabled = false;
+                    // @ts-ignore
+                    input.value = '';
+                    // @ts-ignore
+                    input.focus();
+
+                    // 触发抖动
+                    if(container) {
+                        container.classList.add('animate-shake', 'border-red-600');
+                        setTimeout(() => {
+                            container.classList.remove('animate-shake', 'border-red-600');
+                        }, 500);
+                    }
                 }
             });
         }
     </script>
+
+    <style>
+        /* 错误抖动动画 */
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            10%, 30%, 50%, 70%, 90% { transform: translateX(-5px); }
+            20%, 40%, 60%, 80% { transform: translateX(5px); }
+        }
+        .animate-shake {
+            animation: shake 0.4s cubic-bezier(.36,.07,.19,.97) both;
+        }
+    </style>
 </body>
 </html>

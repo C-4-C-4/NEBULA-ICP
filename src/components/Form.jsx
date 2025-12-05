@@ -1,6 +1,7 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 
 export default function Form() {
+  const formRef = useRef(null); 
   const [status, setStatus] = useState('idle'); 
   const [result, setResult] = useState(null);
   const [authCode, setAuthCode] = useState(null);
@@ -9,6 +10,8 @@ export default function Form() {
   const [logText, setLogText] = useState("INITIALIZING...");
   const [toast, setToast] = useState(null);
   const [preSelectedCode, setPreSelectedCode] = useState(null);
+  
+  const [showWarning, setShowWarning] = useState(false);
 
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
@@ -33,15 +36,33 @@ export default function Form() {
     { pct: 100, text: "COMPLETED." }
   ];
 
-  const handleSubmit = async (e) => {
+  const handleFormSubmit = (e) => {
     e.preventDefault();
+    const formData = new FormData(e.target);
+    const logo = formData.get('logo');
+    const desc = formData.get('desc');
+
+    if (!logo.trim() || !desc.trim()) {
+        setShowWarning(true);
+    } else {
+        processSubmission(formData);
+    }
+  };
+
+  const confirmWarning = () => {
+    setShowWarning(false);
+    if (formRef.current) {
+        const formData = new FormData(formRef.current);
+        processSubmission(formData);
+    }
+  };
+
+  const processSubmission = async (formData) => {
     setStatus('processing');
     setProgress(0);
     setResult(null);
     setAuthCode(null);
     setToast(null);
-    
-    const formData = new FormData(e.target);
 
     const apiRequest = fetch('/api/submit', { method: 'POST', body: formData })
       .then(res => res.json())
@@ -98,13 +119,8 @@ export default function Form() {
   const inputStyle = "w-full bg-white border border-echo-dark px-2 py-1.5 font-mono text-sm focus:outline-none focus:shadow-hard focus:border-echo-orange transition-all placeholder-gray-300";
   const labelStyle = "block text-[10px] font-bold mb-0.5 uppercase tracking-wider text-echo-orange";
 
-  // === 状态 1: 成功结果页 ===
   if (status === 'finished' && result) {
-    // 核心修改：使用当前域名 + archives 路径 + 查询参数 q
-    // 这样点击链接后，会跳转到档案页，并自动搜索+弹窗
-    const origin = typeof window !== 'undefined' ? window.location.origin : 'https://icp.996icu.eu.org';
-    const icpLink = `${origin}/archives?q=${result}`;
-    
+    const icpLink = `https://icp.996icu.eu.org/?keyword=${result}`;
     const htmlCode = `<a href="${icpLink}" target="_blank">星云ICP备${result}号</a>`;
 
     return (
@@ -158,7 +174,6 @@ export default function Form() {
     );
   }
 
-  // === 状态 2: 处理动画页 ===
   if (status === 'processing') {
     return (
       <div className="bg-echo-dark border-2 border-echo-orange p-6 shadow-hard relative min-h-[400px] flex flex-col justify-between font-mono">
@@ -188,7 +203,6 @@ export default function Form() {
     );
   }
 
-  // === 状态 3: 表单页 ===
   return (
     <div className="bg-white border-2 border-echo-dark p-5 shadow-hard relative max-w-2xl mx-auto min-h-[400px]">
       <div className="flex justify-between items-end mb-4 border-b-2 border-echo-orange pb-1">
@@ -204,41 +218,39 @@ export default function Form() {
         )}
       </div>
 
-      <form onSubmit={handleSubmit} className="space-y-3">
+      <form ref={formRef} onSubmit={handleFormSubmit} className="space-y-3">
         {preSelectedCode && <input type="hidden" name="custom_code" value={preSelectedCode} />}
         
         <div className="grid grid-cols-2 gap-3">
           <div>
-            <label className={labelStyle}>Domain (域名)</label>
+            <label className={labelStyle}>DOMAIN (域名)</label>
             <input name="domain" required placeholder="example.com" className={inputStyle} />
           </div>
           <div>
-            <label className={labelStyle}>Site Name (网站名称)</label>
+            <label className={labelStyle}>SITE NAME (网站名称)</label>
             <input name="title" required placeholder="Project Zero" className={inputStyle} />
           </div>
         </div>
 
         <div className="grid grid-cols-2 gap-3">
           <div>
-            <label className={labelStyle}>Owner (站长)</label>
+            <label className={labelStyle}>OWNER (站长)</label>
             <input name="owner" required placeholder="你的昵称" className={inputStyle} />
           </div>
           <div>
-            <label className={labelStyle}>Email (邮箱)</label>
-            <input name="email" type="email" placeholder="hi@echo.cc" className={inputStyle} />
+            <label className={labelStyle}>EMAIL (邮箱)</label>
+            <input name="email" type="email" placeholder="hi@nebula.cc" className={inputStyle} />
           </div>
         </div>
 
         <div>
-           <label className={labelStyle}>Logo URL (小图标, 留空则自动获取)</label>
+           <label className={labelStyle}>LOGO URL (小图标, 留空则自动获取)</label>
            <input name="logo" placeholder="https://..." className={inputStyle} />
-           <p className="text-[10px] text-gray-400 mt-1">* 建议填写。如留空将进入人工审核模式。</p>
         </div>
         
         <div>
-          <label className={labelStyle}>Description (简述)</label>
+          <label className={labelStyle}>DESCRIPTION (简述)</label>
           <textarea name="desc" rows="3" placeholder="关于该实体的简要描述..." className={inputStyle}></textarea>
-          <p className="text-[10px] text-gray-400 mt-1">* 建议填写。如留空将进入人工审核模式。</p>
         </div>
 
         <button className="w-full bg-echo-dark text-white font-bold py-3 text-sm mt-4 border-2 border-transparent hover:bg-echo-orange hover:shadow-hard transition-all">
@@ -246,13 +258,57 @@ export default function Form() {
         </button>
       </form>
       
+      {/* 
+         === 警告弹窗 (Warning Modal) === 
+         修改：增加了 animate-alert-in 实现快速回弹动画
+      */}
+      {showWarning && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm animate-fade-in">
+          <div className="bg-white border-2 border-echo-orange p-6 w-[90%] max-w-sm shadow-[8px_8px_0_0_#E85D22] relative animate-alert-in">
+            <h3 className="text-xl font-black text-echo-orange mb-4 tracking-tighter">MISSING DATA // 信息缺失</h3>
+            <p className="text-sm font-bold text-gray-700 mb-6 leading-relaxed">
+                检测到 <span className="font-mono">Logo</span> 或 <span className="font-mono">简介</span> 为空。<br/>
+                这将触发 <span className="text-red-600 bg-red-100 px-1 border border-red-200">人工审核</span> 流程，可能导致收录延迟。
+            </p>
+            <div className="flex gap-3">
+                <button 
+                    type="button"
+                    onClick={() => setShowWarning(false)} 
+                    className="flex-1 border-2 border-black py-3 font-black hover:bg-gray-100 text-xs transition-colors"
+                >
+                    BACK // 返回填写
+                </button>
+                <button 
+                    type="button"
+                    onClick={confirmWarning} 
+                    className="flex-1 bg-black text-white py-3 font-black hover:bg-echo-orange border-2 border-transparent hover:text-black transition-colors text-xs"
+                >
+                    CONTINUE // 继续提交
+                </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       {toast && (
           <div className={`absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-50 px-6 py-4 shadow-[8px_8px_0_0_rgba(0,0,0,0.5)] border-2 font-bold text-sm tracking-wide animate-bounce-in text-center min-w-[320px] max-w-[90%] ${toast.type === 'error' ? 'bg-echo-dark text-white border-red-500' : 'bg-echo-dark text-white border-green-500'}`}>
              <div className="text-xl mb-1">{toast.type === 'error' ? '⚠️ ERROR' : '✅ SUCCESS'}</div>
              <div className="break-words">{toast.msg}</div>
           </div>
       )}
-      <style>{`.animate-bounce-in{animation:bounceIn 0.3s cubic-bezier(0.18,0.89,0.32,1.28)}.animate-fade-in-up{animation:fadeInUp 0.3s ease-out}@keyframes bounceIn{from{transform:translate(-50%,-40%) scale(0.9);opacity:0}to{transform:translate(-50%,-50%) scale(1);opacity:1}}@keyframes fadeInUp{from{transform:translate(-50%,10px);opacity:0}to{transform:translate(-50%,0);opacity:1}}`}</style>
+      
+      {/* 增加了 animate-alert-in 的定义 */}
+      <style>{`
+        .animate-bounce-in{animation:bounceIn 0.3s cubic-bezier(0.18,0.89,0.32,1.28)}
+        .animate-fade-in-up{animation:fadeInUp 0.3s ease-out}
+        
+        /* 新增：警告框的弹出动画 (快速放大+回弹) */
+        .animate-alert-in{animation:alertIn 0.4s cubic-bezier(0.34, 1.56, 0.64, 1)}
+        
+        @keyframes bounceIn{from{transform:translate(-50%,-40%) scale(0.9);opacity:0}to{transform:translate(-50%,-50%) scale(1);opacity:1}}
+        @keyframes fadeInUp{from{transform:translate(-50%,10px);opacity:0}to{transform:translate(-50%,0);opacity:1}}
+        @keyframes alertIn{from{opacity:0;transform:scale(0.9)}to{opacity:1;transform:scale(1)}}
+      `}</style>
     </div>
   );
 }

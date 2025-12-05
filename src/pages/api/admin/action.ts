@@ -18,7 +18,7 @@ export const POST: APIRoute = async ({ request, locals, cookies }) => {
       return new Response(JSON.stringify({ success: true }));
     }
 
-    // 2. 切换显示/隐藏 (仅对非黑名单有效)
+    // 2. 切换显示/隐藏
     if (action === "toggle_hide") {
       const id = formData.get("id");
       const currentHidden = formData.get("current_val"); 
@@ -27,23 +27,21 @@ export const POST: APIRoute = async ({ request, locals, cookies }) => {
       return new Response(JSON.stringify({ success: true }));
     }
 
-    // 3. 审核通过 (Approve)
+    // 3. 审核通过
     if (action === "approve") {
       const id = formData.get("id");
-      // 将状态改为 active，并显示出来
       await DB.prepare("UPDATE sites SET status = 'active', is_hidden = 0 WHERE id = ?").bind(id).run();
       return new Response(JSON.stringify({ success: true }));
     }
 
-    // 4. 驳回/拉黑 (Reject)
+    // 4. 驳回/拉黑
     if (action === "reject") {
       const id = formData.get("id");
-      // 将状态改为 rejected (黑名单状态)，并隐藏
       await DB.prepare("UPDATE sites SET status = 'rejected', is_hidden = 1 WHERE id = ?").bind(id).run();
       return new Response(JSON.stringify({ success: true }));
     }
 
-    // 5. 编辑/修改
+    // 5. 编辑/修改 (核心修改点)
     if (action === "update") {
       const id = formData.get("id");
       const title = formData.get("title");
@@ -54,11 +52,15 @@ export const POST: APIRoute = async ({ request, locals, cookies }) => {
       const snapshot = formData.get("snapshot");
       const authCode = formData.get("auth_code");
       
+      // 新增字段
+      const email = formData.get("email");
+      const date = formData.get("date"); // created_at
+      
       await DB.prepare(
         `UPDATE sites 
-         SET title = ?, domain = ?, owner = ?, icp_code = ?, logo_url = ?, snapshot_url = ?, auth_code = ? 
+         SET title = ?, domain = ?, owner = ?, icp_code = ?, logo_url = ?, snapshot_url = ?, auth_code = ?, email = ?, created_at = ?
          WHERE id = ?`
-      ).bind(title, domain, owner, icp, logo, snapshot, authCode, id).run();
+      ).bind(title, domain, owner, icp, logo, snapshot, authCode, email, date, id).run();
       
       return new Response(JSON.stringify({ success: true }));
     }

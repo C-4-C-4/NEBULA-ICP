@@ -13,6 +13,25 @@ export default function AdminPanel({ sites }) {
   const [toast, setToast] = useState(null); 
   const [confirmModal, setConfirmModal] = useState(null); 
   const [loadingId, setLoadingId] = useState(null); 
+  
+  // 动画状态
+  const [isExiting, setIsExiting] = useState(false);
+  const [bootAnim, setBootAnim] = useState(''); // 新增：控制进场动画
+
+  // === 核心修改：控制进场动画只播放一次 ===
+  useEffect(() => {
+    // 检查当前会话是否已经播放过开机动画
+    const hasBooted = sessionStorage.getItem('admin_booted');
+    
+    if (!hasBooted) {
+        // 如果没播放过，设置动画类，并标记为已播放
+        setBootAnim('animate-crt-in');
+        sessionStorage.setItem('admin_booted', 'true');
+    } else {
+        // 如果已播放过（刷新页面），不设置动画类
+        setBootAnim('');
+    }
+  }, []);
 
   // === 辅助逻辑 ===
 
@@ -65,8 +84,18 @@ export default function AdminPanel({ sites }) {
     setConfirmModal({
       title: "TERMINATE SESSION?",
       onConfirm: async () => {
-        await fetch('/api/admin/logout', { method: 'POST' });
-        window.location.reload();
+        // 1. 播放退出动画
+        setConfirmModal(null);
+        setIsExiting(true);
+        
+        // 2. 清除开机动画标记，确保下次登录能看到动画
+        sessionStorage.removeItem('admin_booted');
+
+        // 3. 动画结束后执行登出
+        setTimeout(async () => {
+            await fetch('/api/admin/logout', { method: 'POST' });
+            window.location.reload();
+        }, 800); 
       }
     });
   };
@@ -107,6 +136,8 @@ export default function AdminPanel({ sites }) {
         const logo = document.getElementById(`e-logo-${id}`).value;
         const snapshot = document.getElementById(`e-snapshot-${id}`).value;
         const authCode = document.getElementById(`e-auth-${id}`).value;
+        const email = document.getElementById(`e-email-${id}`).value;
+        const date = document.getElementById(`e-date-${id}`).value;
 
         const fd = new FormData();
         fd.append('action', 'update');
@@ -118,6 +149,8 @@ export default function AdminPanel({ sites }) {
         fd.append('logo', logo);
         fd.append('snapshot', snapshot);
         fd.append('auth_code', authCode);
+        fd.append('email', email);
+        fd.append('date', date);
         
         setLoadingId(id);
         const success = await handleAction(fd);
@@ -187,13 +220,14 @@ export default function AdminPanel({ sites }) {
   const btnAnim = "transition-all duration-200 hover:-translate-y-0.5 hover:shadow-[2px_2px_0_0_currentColor] active:translate-y-0 active:shadow-none";
 
   return (
-    <div className="bg-black text-green-500 font-mono min-h-screen border-t-8 border-echo-orange p-4 relative pb-24">
+    // 核心修改：使用 bootAnim 状态控制进场动画，而不是写死
+    <div className={`bg-black text-green-500 font-mono min-h-screen border-t-8 border-echo-orange p-4 relative pb-24 ${isExiting ? 'animate-shutdown' : bootAnim}`}>
       
-      {/* === 顶部栏 === */}
+      {/* 顶部栏 */}
       <div className="flex flex-col lg:flex-row justify-between items-center mb-4 border-b border-green-800 pb-4 gap-6 sticky top-0 bg-black/95 backdrop-blur z-30 pt-2 shadow-xl">
         <div className="flex flex-col w-full lg:w-auto">
           <h1 className="text-3xl font-black text-white tracking-tighter mb-1">ROOT_CONSOLE</h1>
-          <div className="text-xs text-green-600">SYSTEM.ADMIN // V4.6</div>
+          <div className="text-xs text-green-600">SYSTEM.ADMIN // V5.1</div>
         </div>
 
         <div className="flex-1 w-full lg:max-w-xl relative group">
@@ -219,7 +253,7 @@ export default function AdminPanel({ sites }) {
         </div>
       </div>
 
-      {/* === 筛选 Tab === */}
+      {/* 筛选 Tab */}
       <div className="flex gap-3 mb-6 text-sm font-bold flex-wrap">
           {['all', 'pending', 'active', 'rejected'].map(status => (
               <button 
@@ -241,7 +275,38 @@ export default function AdminPanel({ sites }) {
           ))}
       </div>
 
-      {/* === 卡片网格 === */}
+      {/* 批量操作 */}
+      {selectedIds.size > 0 && (
+          <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-40 bg-echo-orange text-black px-6 py-3 shadow-[0_0_20px_rgba(232,93,34,0.5)] flex items-center gap-6 font-bold border-2 border-white animate-slide-up w-[90%] md:w-auto justify-between md:justify-center rounded-sm">
+              <div className="flex items-center gap-2">
+                  <span className="bg-black text-white px-2 py-0.5 text-xs">{selectedIds.size} SELECTED</span>
+              </div>
+              <div className="flex gap-2 text-sm">
+                  <button onClick={() => handleBatchAction('toggle_hide')} className="hover:bg-black hover:text-white px-3 py-1 border border-black transition-colors">
+                      TOGGLE VISIBILITY
+                  </button>
+                  <button onClick={() => handleBatchAction('delete')} className="bg-black text-white px-3 py-1 border border-black hover:bg-red-600 hover:border-red-600 transition-colors">
+                      DELETE ALL
+                  </button>
+              </div>
+              <button onClick={() => setSelectedIds(new Set())} className="text-xs underline hover:no-underline">X</button>
+          </div>
+      )}
+
+      {/* 全选/统计栏 */}
+      <div className="flex justify-between items-center mb-4 text-xs px-1">
+         <label className="flex items-center gap-2 cursor-pointer hover:text-white">
+             <input type="checkbox" 
+                checked={selectedIds.size === filteredList.length && filteredList.length > 0}
+                onChange={toggleSelectAll}
+                className="accent-echo-orange w-4 h-4 cursor-pointer"
+             />
+             <span>SELECT ALL VISIBLE</span>
+         </label>
+         <div className="opacity-50">DISPLAYING {filteredList.length} ITEMS</div>
+      </div>
+
+      {/* 卡片网格 */}
       <div className="grid grid-cols-1 md:grid-cols-3 xl:grid-cols-5 2xl:grid-cols-6 gap-4">
         {filteredList.map(site => (
           <div key={site.id} className={`
@@ -262,7 +327,7 @@ export default function AdminPanel({ sites }) {
                 <input type="checkbox" checked={selectedIds.has(site.id)} onChange={() => toggleSelect(site.id)} className="w-5 h-5 accent-echo-orange border-2 border-black cursor-pointer shadow-sm" />
             </div>
 
-            {/* === 编辑模式 === */}
+            {/* 编辑模式 */}
             {editingId === site.id ? (
               <div className="p-3 flex flex-col gap-2 h-full text-xs overflow-y-auto">
                 <div className="text-[10px] text-echo-orange font-bold mb-1 pl-6">EDITING...</div>
@@ -272,7 +337,11 @@ export default function AdminPanel({ sites }) {
                     <input id={`e-owner-${site.id}`} defaultValue={site.owner} placeholder="Owner" className="bg-black border border-green-600 text-gray-300 px-2 py-1 w-1/2 focus:border-echo-orange focus:outline-none" />
                     <input id={`e-icp-${site.id}`} defaultValue={site.icp_code} placeholder="ICP" className="bg-black border border-green-600 text-gray-300 px-2 py-1 w-1/2 focus:border-echo-orange focus:outline-none" />
                 </div>
-                <div className="space-y-1 pt-1">
+                <div className="space-y-2 pt-1 border-t border-green-900/50">
+                    <input id={`e-email-${site.id}`} defaultValue={site.email} placeholder="Email" className="bg-black border border-green-700 text-gray-300 px-2 py-1 w-full focus:border-echo-orange focus:outline-none" />
+                    <input id={`e-date-${site.id}`} defaultValue={site.created_at} placeholder="Date" className="bg-black border border-green-700 text-gray-300 px-2 py-1 w-full focus:border-echo-orange focus:outline-none font-mono" />
+                </div>
+                <div className="space-y-1 pt-1 border-t border-green-900/50">
                     <input id={`e-logo-${site.id}`} defaultValue={site.logo_url} placeholder="Logo URL" className="bg-black border border-green-800 text-gray-400 px-2 py-1 w-full focus:border-echo-orange focus:outline-none text-[10px]" />
                     <input id={`e-snapshot-${site.id}`} defaultValue={site.snapshot_url} placeholder="Snapshot URL" className="bg-black border border-green-800 text-gray-400 px-2 py-1 w-full focus:border-echo-orange focus:outline-none text-[10px]" />
                     <div>
@@ -286,7 +355,7 @@ export default function AdminPanel({ sites }) {
                 </div>
               </div>
             ) : (
-              /* === 展示模式 === */
+              /* 展示模式 */
               <>
                 <div className="p-2 pl-8 border-b border-green-900/50 bg-black/20 flex justify-between items-center h-10">
                     <div className="text-[10px] text-green-700 font-bold">#{site.id}</div>
@@ -304,7 +373,6 @@ export default function AdminPanel({ sites }) {
 
                 <div className="h-24 w-full bg-green-900/10 relative overflow-hidden border-b border-green-900/30 group-hover:opacity-100 opacity-80 transition-opacity">
                     <img src={site.snapshot_url} className="w-full h-full object-cover grayscale opacity-50 group-hover:grayscale-0 group-hover:opacity-80 transition-all" onError={(e) => e.target.style.display = 'none'} />
-                    
                     <div className="absolute bottom-2 right-2">
                         <img src={site.logo_url} className="w-8 h-8 rounded-full border border-green-500 bg-white object-contain p-0.5" 
                              onError={(e) => {
@@ -313,8 +381,6 @@ export default function AdminPanel({ sites }) {
                              }} 
                         />
                     </div>
-
-                    {/* === 核心修改：隐藏时的锁头遮罩 === */}
                     {site.is_hidden === 1 && (
                         <div className="absolute inset-0 bg-black/80 backdrop-blur-[2px] flex items-center justify-center z-10 border-b border-red-900/50">
                             <div className="bg-black border border-red-600 p-2 rounded-full shadow-[0_0_10px_rgba(220,38,38,0.5)] animate-pulse">
@@ -362,6 +428,9 @@ export default function AdminPanel({ sites }) {
                             <button onClick={() => handleSingleToggle(site.id, site.is_hidden)} className={`text-[10px] text-green-400 px-2 ${btnAnim} hover:text-white`}>
                                 {site.is_hidden ? '[SHOW]' : '[HIDE]'}
                             </button>
+                            <button onClick={() => handleReject(site.id)} className={`text-[10px] text-red-400 px-2 ${btnAnim} hover:text-white`}>
+                                BAN
+                            </button>
                             <div className="flex gap-2">
                                 <button onClick={() => setEditingId(site.id)} className={`text-[10px] text-echo-orange px-2 ${btnAnim} hover:text-white`}>
                                     EDIT
@@ -401,7 +470,7 @@ export default function AdminPanel({ sites }) {
         </div>
       )}
       
-      <style>{`.animate-fade-in{animation:fadeIn 0.2s ease-out}.animate-slide-in{animation:slideIn 0.3s cubic-bezier(0.16,1,0.3,1)}.animate-slide-up{animation:slideUp 0.3s ease-out}@keyframes fadeIn{from{opacity:0;transform:scale(0.95)}to{opacity:1;transform:scale(1)}}@keyframes slideIn{from{transform:translateY(100%);opacity:0}to{transform:translateY(0);opacity:1}}@keyframes slideUp{from{transform:translate(-50%, 100%);opacity:0}to{transform:translate(-50%, 0);opacity:1}}`}</style>
+      <style>{`.animate-fade-in{animation:fadeIn 0.2s ease-out}.animate-slide-in{animation:slideIn 0.3s cubic-bezier(0.16,1,0.3,1)}.animate-slide-up{animation:slideUp 0.3s ease-out}.animate-crt-in{animation:crtIn 0.6s cubic-bezier(0.23, 1, 0.32, 1)}.animate-shutdown{animation:shutdown 0.8s ease-in-out forwards}@keyframes crtIn{0%{opacity:0;transform:scaleY(0)}50%{opacity:1;transform:scaleY(0.02)}100%{transform:scaleY(1)}}@keyframes shutdown{0%{transform:scale(1,1);opacity:1;filter:brightness(1)}40%{transform:scale(1,0.005);opacity:1;filter:brightness(3)}50%{transform:scale(0,0);opacity:0}100%{opacity:0}}@keyframes fadeIn{from{opacity:0;transform:scale(0.95)}to{opacity:1;transform:scale(1)}}@keyframes slideIn{from{transform:translateY(100%);opacity:0}to{transform:translateY(0);opacity:1}}@keyframes slideUp{from{transform:translate(-50%, 100%);opacity:0}to{transform:translate(-50%, 0);opacity:1}}`}</style>
     </div>
   );
 }
